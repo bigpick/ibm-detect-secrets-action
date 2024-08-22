@@ -1,15 +1,15 @@
-name: 'Secret Scanner'
-author: 'GarnerCorp'
-description: 'Scan for secrets in a repository'
+name: 'IBM detect-secrets runner'
+author: 'bigpick'
+description: 'Scan for secrets in a repository using IBM/detect-secrets'
 branding:
-  icon: 'eye'
-  color: 'orange'
+  icon: 'alert-octagon'
+  color: 'blue'
 
 inputs:
   detect_secrets_version:
-    description: 'The version of Yelp/detect-secrets to use'
+    description: 'The version of IBM/detect-secrets to use'
     required: false
-    default: '1.3.0'
+    default: '0.13.1+ibm.62.dss'
   detect_secret_additional_args:
     description: 'Extra arguments to pass to the detect-secret binary'
     required: false
@@ -21,7 +21,7 @@ inputs:
   python_version:
     description: "The version of python to use"
     required: false
-    default: '3.10.4'
+    default: '3.11.9'
   exclude_files_path:
     description: "A path to the files containing things to exclude"
     required: false
@@ -36,8 +36,8 @@ runs:
         python-version: ${{ inputs.python_version }}
     - name: Install detect-secrets
       shell: bash
-      run: pip install detect-secrets[gibberish]=="$DETECT_SECRET_VERSION"
-      env: 
+      run: pip install git+https://github.com/ibm/detect-secrets.git@$DETECT_SECRET_VERSION
+      env:
         DETECT_SECRET_VERSION: ${{ inputs.detect_secrets_version }}
     - name: Check for secrets
       shell: bash
