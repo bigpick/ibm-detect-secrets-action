@@ -10,9 +10,9 @@ GITHUB_STEP_SUMMARY=${GITHUB_STEP_SUMMARY:-'/dev/stderr'}
 fetch_flags_from_file() {
     flag_to_add="$1"
     file_to_check="$2"
-    
+
     flags=()
-    while read line; do 
+    while read line; do
         if [[ "${line::1}" != '#' ]] && [[ ! -z "$line" ]]; then
             flag="$flag_to_add $line "
             flags+="$flag"
@@ -29,7 +29,7 @@ scan_new_secrets() {
     detect_secret_args="$excluded_files $excluded_secrets $excluded_lines $DETECT_SECRET_ADDITIONAL_ARGS"
     echo "Running detect-secrets with args: $detect_secret_args"
 
-    detect-secrets scan $detect_secret_args --baseline "$BASELINE_FILE"
+    detect-secrets scan $detect_secret_args --update "$BASELINE_FILE"
     detect-secrets audit "$BASELINE_FILE" --report --json > "$all_secrets_file"
     jq 'map(select(.category == "UNVERIFIED"))' "$all_secrets_file" > "$new_secrets_file"
 }
