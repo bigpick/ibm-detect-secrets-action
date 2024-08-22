@@ -36,7 +36,7 @@ scan_new_secrets() {
     detect-secrets audit "$BASELINE_FILE" --report --json > "$all_secrets_file"
 
     jq -r '.results | keys[]' .secrets.baseline | while read fname; do
-        jq '.results["'$fname'"][] | select(.is_verified == false) + {filename: "'${fname}'"}' $BASELINE_FILE
+        jq '.results["'$fname'"][] | select(.is_secret == null or .is_secret == true) + {filename: "'${fname}'"}' $BASELINE_FILE
     done > ${new_secrets_file}
 
 }
@@ -54,11 +54,11 @@ EOF
 
 generate_command_to_update_secrets_baseline() {
     cat << EOF > "$command_to_update_baseline_file"
-cat << 'NEW_BASELINE' > '$NEW_BASELINE'
-$(jq 'setpath(["results"]; (.results | map_values(. | map_values(setpath(["is_secret"]; (.is_secret // false))))))' "$BASELINE_FILE")
-NEW_BASELINE
-
-git commit -m 'Updating baseline file' '$NEW_BASELINE'
+detect-secrets --verbose scan --update .secrets.baseline  .
+detect-secrets audit .secrets.baseline
+git add .secrets.baseline
+git commit -m 'fix: updating baseline file'
+git push
 EOF
 }
 
