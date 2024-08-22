@@ -36,8 +36,9 @@ scan_new_secrets() {
     detect-secrets audit "$BASELINE_FILE" --report --json > "$all_secrets_file"
 
     jq -r '.results | keys[]' .secrets.baseline | while read fname; do
-        jq '.results["'$fname'"][] | select(.is_verified == false) + {filename: "'${fname}'"}' $BASELINE_FILE >> "${new_secrets_file}"
-    done
+        jq '.results["'$fname'"][] | select(.is_verified == false) + {filename: "'${fname}'"}' $BASELINE_FILE
+    done > ${new_secrets_file}
+
 }
 
 advice_if_none_are_secret_short() {
@@ -109,7 +110,7 @@ else
 fi
 scan_new_secrets
 
-if [ "$(cat $new_secrets_file)" = "[]" ]; then
+if [ "$(cat $new_secrets_file)" = "" ]; then
     echo "No new secrets found"
     exit 0
 fi
