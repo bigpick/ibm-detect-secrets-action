@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+
+# shellcheck disable=all
+
 all_secrets_file=$(mktemp)
 new_secrets_file=$(mktemp)
 command_to_update_baseline_file=$(mktemp)
@@ -31,7 +34,10 @@ scan_new_secrets() {
 
     detect-secrets scan $detect_secret_args --update "$BASELINE_FILE"
     detect-secrets audit "$BASELINE_FILE" --report --json > "$all_secrets_file"
-    jq 'map(select(.category == "UNVERIFIED"))' "$all_secrets_file" > "$new_secrets_file"
+
+    jq -r '.results | keys[]' .secrets.baseline | while read fname; do
+        jq '.results["'$fname'"][] | select(.is_verified == false) + {filename: "'${fname}'"}' $BASELINE_FILE >> "${new_secrets_file}"
+    done
 }
 
 advice_if_none_are_secret_short() {
@@ -74,7 +80,7 @@ EOF
 }
 
 markdown_from_new_secrets() {
-    secrets_table_body_with_json_chars=$(jq -r '.[] | "|\(.filename)|\(.lines | keys)|\(.types)|"' "$new_secrets_file")
+    secrets_table_body_with_json_chars=$(jq -r '. | "|\(.filename)|\(.line_number)|\(.type)|"' "$new_secrets_file")
     secret_table_body=$(echo "$secrets_table_body_with_json_chars" | tr -d '"' | tr -d ']'| tr -d '[')
 
     cat << EOF
